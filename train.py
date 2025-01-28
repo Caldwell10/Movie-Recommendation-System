@@ -1,9 +1,10 @@
 import torch
 from transformers import BertForSequenceClassification, Trainer, TrainingArguments
 from preprocessing import train_dataset, val_dataset
+from metrics import compute_metrics
 
 # Step 1 : Check if GPU is available
-device = torch.device("cuda" if torch.cuda.is_available() else torch.device)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # Step 2: Load the pretrained BERT model
@@ -33,5 +34,8 @@ trainer=Trainer(
     args=training_args,
     train_dataset=train_dataset,
     eval_dataset=val_dataset,
-    compute_metrics=None
+    compute_metrics=compute_metrics,
 )
+
+print("Starting training....")
+trainer.train()

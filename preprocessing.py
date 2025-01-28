@@ -1,10 +1,11 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from transformers import BertTokenizer
-import torch
+from dataset import SentimentDataset
+
 
 # Step 1: Load dataset
-dataset_path = "/Users/caldwellwachira/Downloads/datasets/IMDB_Dataset.csv"
+dataset_path = "/Users/caldwellwachira/Downloads/Bulk-Files/datasets/IMDB_Dataset.csv"
 data = pd.read_csv(dataset_path)
 
 # Step 2: Encode the sentiment labels
@@ -40,6 +41,11 @@ def tokenize_data(texts):
 train_encodings = tokenize_data(train_texts)
 val_encodings = tokenize_data(val_texts)
 test_encodings = tokenize_data(test_texts)
+
+# Step 4: Create PyTorch datasets
+train_dataset = SentimentDataset(train_encodings, train_labels.tolist())
+val_dataset = SentimentDataset(val_encodings, val_labels.tolist())
+test_Dataset = SentimentDataset(test_encodings, test_labels.tolist())
 
 
 
