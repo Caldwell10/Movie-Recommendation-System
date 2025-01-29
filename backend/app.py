@@ -1,7 +1,10 @@
+from mmap import ALLOCATIONGRANULARITY
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
+from fastapi.middleware.cors import CORSMiddleware
 
 # Initialize FastAPI
 app = FastAPI()
@@ -36,5 +39,11 @@ def recommend_movies(request: RecommendationRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3001", "http://127.0.0.1:3001"],  # Allow both
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 

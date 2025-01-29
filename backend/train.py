@@ -1,7 +1,7 @@
 import torch
-from transformers import BertForSequenceClassification, Trainer, TrainingArguments, DistilBertForSequenceClassification
-from preprocessing import train_dataset, val_dataset
-from metrics import compute_metrics
+from transformers import Trainer, TrainingArguments, DistilBertForSequenceClassification
+from backend.preprocessing import train_dataset, val_dataset
+from backend.metrics import compute_metrics
 
 # Step 1 : Check if GPU is available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -22,7 +22,7 @@ training_args = TrainingArguments(
     per_device_eval_batch_size=8,                                   # Batch size for evaluation
     warmup_steps=100,                                                # Warmup steps for learning rate scheduler
     weight_decay=0.01,                                               # Weight decay for regularization
-    logging_dir = "logs",                                            # Directory for logs
+    logging_dir ="../logs",                                            # Directory for logs
     logging_steps=10,                                                # Log every 10 steps
     save_total_limit =2,                                             # Keep only the latest 2 checkpoints
     load_best_model_at_end=True,                                     # Load the best model at the end of training

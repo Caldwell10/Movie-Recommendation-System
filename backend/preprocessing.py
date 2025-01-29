@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from transformers import BertTokenizer
-from dataset import SentimentDataset
+from backend.dataset import SentimentDataset
 
 
 # Step 1: Load dataset
