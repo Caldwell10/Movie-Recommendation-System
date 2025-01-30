@@ -1,51 +1,55 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from transformers import BertTokenizer
-from backend.dataset import SentimentDataset
+from sklearn.preprocessing import MinMaxScaler
+from sentence_transformers import SentenceTransformer
+import pickle
+import os
 
+# Define paths
+dataset_path = "/Users/caldwellwachira/Downloads/Bulk-Files/datasets/imdb_top_1000.csv"
+preprocessed_dataset_path = "/Users/caldwellwachira/Downloads/Bulk-Files/preprocessed_datasets/preprocessed_movies.pkl"
 
-# Step 1: Load dataset
-dataset_path = "/Users/caldwellwachira/Downloads/Bulk-Files/datasets/IMDB_Dataset.csv"
-data = pd.read_csv(dataset_path)
+# Ensure output directory exists
+os.makedirs(os.path.dirname(preprocessed_dataset_path), exist_ok=True)
 
-# Step 2: Encode the sentiment labels
-# Convert 'positive' to 1 and 'negative' to 0
-data['sentiment'] = data['sentiment'].map({'positive': 1, 'negative': 0})
+# Load dataset
+df = pd.read_csv(dataset_path)
 
-# Step 3: Split the dataset into train, validation and test sets
-train_texts, test_texts, train_labels, test_labels = train_test_split(
-    data['review'], data['sentiment'], test_size=0.2, random_state=42
-)
+# Drop rows with missing critical fields
+df = df.dropna(subset=["Series_Title", "Genre", "Overview"])
 
-# Further split the test set to create a validation set
-val_texts, test_texts,val_labels,test_labels=train_test_split(
-    test_texts, test_labels, test_size=0.5, random_state=42
-)
+# Drop unnecessary columns
+df = df.drop(columns=["Poster_Link", "Certificate", "Meta_score"], errors="ignore")
 
-# Step 4: Tokenize the data using BERT tokenzier
-# Initialize the tokenizer
+# Fill missing values for numeric columns
+df["Gross"] = df["Gross"].fillna(0)
+df["No_of_votes"] = df["No_of_votes"].fillna(0)
 
-"""
-Tokenization is the process of breaking down raw text into smaller chunks (tokens) that a machine learning model can understand. For example, in BERT:
+# Convert 'Released_Year' to numeric, remove invalid values
+df["Released_Year"] = pd.to_numeric(df["Released_Year"], errors="coerce")
+df = df.dropna(subset=["Released_Year"])
+df["Released_Year"] = df["Released_Year"].astype(int)
 
-Words → Tokens: It splits the text into smaller units (e.g., words or subwords).
-Tokens → IDs: Each token is converted into a numerical ID from BERT's predefined vocabulary.
-"""
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+# Normalize numerical values
+scaler = MinMaxScaler()
+df["Gross_normalized"] = scaler.fit_transform(df[["Gross"]])
+df["Votes_normalized"] = scaler.fit_transform(df[["No_of_votes"]])
 
-# Define a function to tokenize the text data
-def tokenize_data(texts):
-    return tokenizer(texts.tolist(), truncation=True, padding=True, max_length=128, return_tensors="pt")
+# Process genres
+df["Genre"] = df["Genre"].str.split(",")
 
-# Tokenize train, validation and test sets
-train_encodings = tokenize_data(train_texts)
-val_encodings = tokenize_data(val_texts)
-test_encodings = tokenize_data(test_texts)
+# Create metadata for embeddings
+df["metadata"] = df["Series_Title"] + " " + df["Genre"].apply(lambda x: " ".join(x)) + " " + df["Overview"]
 
-# Step 4: Create PyTorch datasets
-train_dataset = SentimentDataset(train_encodings, train_labels.tolist())
-val_dataset = SentimentDataset(val_encodings, val_labels.tolist())
-test_Dataset = SentimentDataset(test_encodings, test_labels.tolist())
+# Generate embeddings
+print("Generating embeddings...")
+model = SentenceTransformer("all-MiniLM-L6-v2")
+df["embeddings"] = df["metadata"].tolist()  # Fix issue before encoding
+df["embeddings"] = list(model.encode(df["metadata"].tolist(), show_progress_bar=True))
+print("Embeddings generated!")
 
+# Save the preprocessed dataset
+with open(preprocessed_dataset_path, "wb") as f:
+    pickle.dump(df, f)
 
-
+print(f"Preprocessed dataset saved to {preprocessed_dataset_path}")
+print("Preprocessing complete!")
