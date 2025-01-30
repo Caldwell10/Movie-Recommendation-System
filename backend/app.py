@@ -1,49 +1,31 @@
-from mmap import ALLOCATIONGRANULARITY
-
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import torch
 from fastapi.middleware.cors import CORSMiddleware
+from backend.recommend import get_similar_movies  # Import recommendation logic
 
-# Initialize FastAPI
+# ✅ Initialize FastAPI
 app = FastAPI()
 
-
-# Load Model and Tokenizer
-model_name = "/Users/caldwellwachira/Downloads/Bulk-Files/models/checkpoint-5000"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name)
-
-# Define Input Schema
-class RecommendationRequest(BaseModel):
-    user_input: str # User input for movie preferences
-
-@app.post("/recommend")
-def recommend_movies(request: RecommendationRequest):
-    try:
-        # Tokenize input
-        inputs = tokenizer(request.user_input, return_tensors="pt", padding=True, truncation=True)
-
-        # Make prediction
-        with torch.no_grad():
-            outputs = model(**inputs)
-
-        # Since it is a classification model with scores for movie genres
-        scores = torch.softmax(outputs.logits, dim=1).tolist()[0]
-        genre_scores= {f"Genre {i}": score for i, score in enumerate(scores)}
-
-        #Return recommendations
-        return {"recommendations": genre_scores}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+# ✅ Enable CORS for frontend communication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001", "http://127.0.0.1:3001"],  # Allow both
+    allow_origins=["http://localhost:3001", "http://127.0.0.1:3001"],  # Allow frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# ✅ Define Input Schema
+class RecommendationRequest(BaseModel):
+    user_input: str  # User enters a movie title or description
+
+# ✅ API Endpoint for Recommendations
+@app.post("/recommend")
+def recommend_movies(request: RecommendationRequest):
+    try:
+        recommended_movies = get_similar_movies(request.user_input)
+        return {"recommendations": recommended_movies}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+print("✅ API is running on http://127.0.0.1:8002")
