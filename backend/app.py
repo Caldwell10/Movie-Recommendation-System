@@ -17,9 +17,9 @@ app.add_middleware(
 
 # ✅ Define Input Schema
 class RecommendationRequest(BaseModel):
-    user_input: str  # User enters a movie title or description
+    user_input: str
 
-# ✅ API Endpoint for Recommendations
+# API Endpoint for Recommendations
 @app.post("/recommend")
 def recommend_movies(request: RecommendationRequest):
     try:

@@ -1,11 +1,12 @@
 import pickle
+import os
 import torch
 from sentence_transformers import SentenceTransformer, util
 
 # ✅ Load the Preprocessed Dataset
-preprocessed_dataset_path = "/Users/caldwellwachira/Downloads/Bulk-Files/preprocessed_movies.pkl"
+pkl_path = os.path.join(os.path.dirname(__file__), "preprocessed_movies.pkl")
 
-with open(preprocessed_dataset_path, "rb") as f:
+with open(pkl_path, "rb") as f:
     df = pickle.load(f)
 
 print("✅ Preprocessed movie dataset loaded!")

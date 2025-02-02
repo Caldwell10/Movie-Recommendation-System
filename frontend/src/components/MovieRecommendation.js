@@ -1,65 +1,58 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import axios from "axios";
-import "./MovieRecommendation.css"
+import "./MovieRecommendation.css";
+import { FaStar, FaSearch } from "react-icons/fa";
 
 const MovieRecommendation = () => {
     const [userInput, setUserInput] = useState("");
-    const [recommendations, setRecommendations] = useState(null)
-    const [error, setError] = useState(null)
-    const [loading, setLoading] = useState(false)
+    const [recommendations, setRecommendations] = useState([]);
 
     const handleInputChange = (e) => {
         setUserInput(e.target.value);
     };
-    const fetchRecommendations = async () => {
-        if(!userInput.trim()){
-            setError("Please enter a movie name.");
-            return
-        }
-        setLoading(true);
-        setError(null);
 
+    const fetchRecommendations = async () => {
         try {
             const response = await axios.post("http://127.0.0.1:8002/recommend", {
                 user_input: userInput,
             });
             setRecommendations(response.data.recommendations);
-        }catch (error) {
-            console.error("Error fetching recommendations:", error)
-            setError("Failed to fetch recommendations. Please try again.");
-        }finally{
-            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching recommendations:", error);
         }
     };
+
     return (
         <div className="container">
-            <h1>🎬 Movie Recommendation System</h1>
+            <h1 className="title">🎬 Movie Recommendation System</h1>
+
             <div className="input-container">
                 <input
                     type="text"
-                    placeholder="Enter a movie title..."
+                    placeholder="Enter a movie or genre..."
                     value={userInput}
                     onChange={handleInputChange}
                 />
-                <button onClick={fetchRecommendations} disabled={loading}>
-                    {loading ? "Loading..." : "Get Recommendations"}
+                <button onClick={fetchRecommendations}>
+                    <FaSearch className="search-icon" /> Get Recommendations
                 </button>
             </div>
 
-            {error && <p className="error-message">{error}</p>}
-
-            {recommendations && recommendations.length > 0 && (
+            {recommendations.length > 0 && (
                 <div className="recommendations">
                     <h2>Recommended Movies:</h2>
-                    <ul>
-                        {recommendations.map((movie, index) => (
-                            <li key={index}>
-                                <strong>{movie.title}</strong> ({movie.year}) - ⭐ {movie.rating} <br />
-                                <em>{movie.genres}</em> <br />
-                                <p>{movie.summary}</p>
-                            </li>
-                        ))}
-                    </ul>
+                    {recommendations.map((movie, index) => (
+                        <div className="movie-card" key={index}>
+                            <h3>
+                                {movie.title} <span className="year">({movie.year})</span>
+                            </h3>
+                            <p className="genre">{movie.genres}</p>
+                            <p className="rating">
+                                <FaStar className="star-icon" /> {movie.rating}
+                            </p>
+                            <p className="summary">{movie.summary}</p>
+                        </div>
+                    ))}
                 </div>
             )}
         </div>
