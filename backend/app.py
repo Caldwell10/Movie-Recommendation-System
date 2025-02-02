@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from backend.recommend import get_similar_movies  # Import recommendation logic
+from recommend import get_similar_movies
 
 # ✅ Initialize FastAPI
 app = FastAPI()
